@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { ArrowLeft, Play, Pause, Repeat, Eye, EyeOff, ChevronRight, Loader2 } from 'lucide-react';
 import { type Surah } from '@/data/surahs';
-import { fetchSurahAyahs, preloadAudio, type AyahData } from '@/services/quranApi';
+import { fetchSurahAyahs, fetchAyahTimings, getSurahAudioUrl, type AyahData, type AyahTiming } from '@/services/quranApi';
 
 interface SurahReaderProps {
   surah: Surah;
@@ -17,25 +17,27 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
   const [showControls, setShowControls] = useState(true);
   const [currentAyah, setCurrentAyah] = useState(0);
   const [ayahs, setAyahs] = useState<AyahData[]>([]);
+  const [timings, setTimings] = useState<AyahTiming[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const ayahRefs = useRef<(HTMLParagraphElement | null)[]>([]);
   const isPlayingRef = useRef(false);
+  const syncIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch surah text
+  // Fetch surah text + timings
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetchSurahAyahs(surah.id)
-      .then(data => {
-        setAyahs(data);
+    Promise.all([
+      fetchSurahAyahs(surah.id),
+      fetchAyahTimings(surah.id),
+    ])
+      .then(([ayahData, timingData]) => {
+        setAyahs(ayahData);
+        setTimings(timingData);
         setLoading(false);
-        // Preload first few audio segments
-        if (data.length > 0) {
-          preloadAudio(data.slice(0, 3).map(a => a.audioUrl));
-        }
       })
       .catch(() => {
         setError('Failed to load surah');
@@ -51,80 +53,105 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
     }
   }, [currentAyah]);
 
-  // Preload next audio segments
-  useEffect(() => {
-    if (ayahs.length > 0 && currentAyah < ayahs.length - 1) {
-      const upcoming = ayahs.slice(currentAyah + 1, currentAyah + 3).map(a => a.audioUrl);
-      preloadAudio(upcoming);
-    }
-  }, [currentAyah, ayahs]);
-
-  const playAyah = useCallback((index: number) => {
-    if (!ayahs[index]) return;
-
-    // Stop current audio
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.removeAttribute('src');
-    }
-
-    const audio = new Audio(ayahs[index].audioUrl);
-    audioRef.current = audio;
-
-    audio.onended = () => {
-      if (isPlayingRef.current) {
-        if (isLooping) {
-          // Replay same ayah
-          audio.currentTime = 0;
-          audio.play();
-        } else if (index < ayahs.length - 1) {
-          // Advance to next
-          const nextIndex = index + 1;
-          setCurrentAyah(nextIndex);
-          onAdvanceAyah();
-          playAyah(nextIndex);
-        } else {
-          // End of surah
-          setIsPlaying(false);
-          isPlayingRef.current = false;
+  // Start time-based sync to update currentAyah based on audio position
+  const startSync = useCallback(() => {
+    stopSync();
+    syncIntervalRef.current = setInterval(() => {
+      const audio = audioRef.current;
+      if (!audio || !timings.length) return;
+      const currentMs = audio.currentTime * 1000;
+      for (let i = timings.length - 1; i >= 0; i--) {
+        if (currentMs >= timings[i].start_time) {
+          setCurrentAyah(prev => {
+            if (prev !== i) {
+              onAdvanceAyah();
+              return i;
+            }
+            return prev;
+          });
+          break;
         }
       }
-    };
+    }, 150);
+  }, [timings, onAdvanceAyah]);
 
+  const stopSync = useCallback(() => {
+    if (syncIntervalRef.current) {
+      clearInterval(syncIntervalRef.current);
+      syncIntervalRef.current = null;
+    }
+  }, []);
+
+  // Create or get audio element for the full surah
+  const getAudio = useCallback(() => {
+    if (!audioRef.current) {
+      const audio = new Audio(getSurahAudioUrl(surah.id));
+      audio.preload = 'auto';
+      audioRef.current = audio;
+
+      audio.onended = () => {
+        if (isLooping && isPlayingRef.current) {
+          audio.currentTime = 0;
+          audio.play();
+        } else {
+          setIsPlaying(false);
+          isPlayingRef.current = false;
+          stopSync();
+        }
+      };
+    }
+    return audioRef.current;
+  }, [surah.id, isLooping, stopSync]);
+
+  const seekToAyah = useCallback((index: number) => {
+    if (!timings[index]) return;
+    const audio = getAudio();
+    audio.currentTime = timings[index].start_time / 1000;
+  }, [timings, getAudio]);
+
+  const handleTapAyah = useCallback((index: number) => {
+    setCurrentAyah(index);
+    const audio = getAudio();
+    seekToAyah(index);
+    setIsPlaying(true);
+    isPlayingRef.current = true;
     audio.play().catch(() => {
       setIsPlaying(false);
       isPlayingRef.current = false;
     });
-  }, [ayahs, isLooping, onAdvanceAyah]);
-
-  const handleTapAyah = useCallback((index: number) => {
-    setCurrentAyah(index);
-    setIsPlaying(true);
-    isPlayingRef.current = true;
-    playAyah(index);
-  }, [playAyah]);
+    startSync();
+  }, [getAudio, seekToAyah, startSync]);
 
   const togglePlayPause = useCallback(() => {
+    const audio = getAudio();
     if (isPlaying) {
-      audioRef.current?.pause();
+      audio.pause();
       setIsPlaying(false);
       isPlayingRef.current = false;
+      stopSync();
     } else {
+      if (timings[currentAyah] && audio.currentTime < timings[currentAyah].start_time / 1000) {
+        seekToAyah(currentAyah);
+      }
       setIsPlaying(true);
       isPlayingRef.current = true;
-      playAyah(currentAyah);
+      audio.play().catch(() => {
+        setIsPlaying(false);
+        isPlayingRef.current = false;
+      });
+      startSync();
     }
-  }, [isPlaying, currentAyah, playAyah]);
+  }, [isPlaying, currentAyah, getAudio, seekToAyah, startSync, stopSync, timings]);
 
   const handleNext = useCallback(() => {
     if (currentAyah < ayahs.length - 1) {
       const next = currentAyah + 1;
       setCurrentAyah(next);
       if (isPlaying) {
-        playAyah(next);
+        seekToAyah(next);
       }
     }
-  }, [currentAyah, ayahs.length, isPlaying, playAyah]);
+  }, [currentAyah, ayahs.length, isPlaying, seekToAyah]);
 
   const handleTapContent = useCallback(() => {
     if (focusMode) setShowControls(prev => !prev);
@@ -146,8 +173,9 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
         audioRef.current = null;
       }
       isPlayingRef.current = false;
+      stopSync();
     };
-  }, []);
+  }, [stopSync]);
 
   return (
     <div className="fixed inset-0 bg-background z-30 flex flex-col">
@@ -192,7 +220,7 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
           <div className="max-w-lg w-full space-y-4">
             {/* Bismillah for surahs other than At-Tawbah */}
             {surah.id !== 9 && surah.id !== 1 && (
-              <p className="font-quran text-center text-muted-foreground" style={{ fontSize: '22px', lineHeight: '2', marginBottom: '12px' }}>
+              <p className="font-quran text-center text-foreground" style={{ fontSize: '22px', lineHeight: '2', marginBottom: '12px' }}>
                 بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
               </p>
             )}
@@ -205,9 +233,7 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
                 className={`font-quran text-center cursor-pointer transition-all duration-300 ${
                   i === currentAyah
                     ? 'text-foreground'
-                    : i < currentAyah
-                    ? 'text-foreground/70'
-                    : 'text-muted-foreground/50'
+                    : 'text-foreground'
                 }`}
                 style={{
                   fontSize: '24px',
@@ -215,10 +241,11 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
                   padding: '4px 10px',
                   borderRadius: '6px',
                   backgroundColor: i === currentAyah ? 'hsl(var(--accent) / 0.5)' : 'transparent',
+                  opacity: i === currentAyah ? 1 : i < currentAyah ? 0.7 : 0.85,
                 }}
               >
                 {ayah.text}
-                <span className="text-muted-foreground/30 mx-1" style={{ fontSize: '13px' }}>
+                <span className="text-muted-foreground/50 mx-1" style={{ fontSize: '13px' }}>
                   ﴿{ayah.numberInSurah}﴾
                 </span>
               </p>
@@ -266,7 +293,7 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
 
           <div className="text-center pb-3">
             <span className="text-muted-foreground" style={{ fontSize: '10px' }}>
-              Mishary Alafasy
+              Mansour Al Salmi
             </span>
           </div>
         </div>
