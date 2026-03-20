@@ -55,7 +55,9 @@ export async function fetchAyahTimings(surahId: number): Promise<AyahTiming[]> {
 
 // Normalize Arabic text by removing diacritics for comparison
 function stripDiacritics(text: string): string {
-  return text.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0890\u0891\u08D3-\u08FF]/g, '');
+  return text
+    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0890\u0891\u08D3-\u08FF]/g, '')
+    .replace(/\u0671/g, '\u0627'); // normalize Alef Wasla → regular Alef
 }
 
 const BISMILLAH_BASE = 'بسم الله الرحمن الرحيم';
