@@ -2,29 +2,55 @@ export interface AyahData {
   number: number;        // ayah number within surah
   numberInSurah: number;
   text: string;          // Uthmani text
-  audioUrl: string;      // per-ayah audio URL
+}
+
+export interface AyahTiming {
+  ayah: number;          // ayah number within surah (1-based)
+  start_time: number;    // milliseconds
+  end_time: number;      // milliseconds
 }
 
 interface ApiAyah {
   number: number;
   numberInSurah: number;
   text: string;
-  audio?: string;
-}
-
-interface ApiResponse {
-  code: number;
-  data: ApiAyah[] | { ayahs: ApiAyah[] }[];
 }
 
 const textCache = new Map<number, AyahData[]>();
+const timingCache = new Map<number, AyahTiming[]>();
 const preloadQueue = new Set<number>();
 
-// Build audio URL from everyayah.com for Alafasy (most reliable per-ayah CDN)
-function getAudioUrl(surahNumber: number, ayahNumber: number): string {
+// Mansour Al Salmi reciter ID on mp3quran.net
+const RECITER_READ_ID = 245;
+const AUDIO_SERVER = 'https://server14.mp3quran.net/mansor/';
+
+// Build full surah audio URL for Mansour Al Salmi
+export function getSurahAudioUrl(surahNumber: number): string {
   const s = String(surahNumber).padStart(3, '0');
-  const a = String(ayahNumber).padStart(3, '0');
-  return `https://everyayah.com/data/Alafasy_128kbps/${s}${a}.mp3`;
+  return `${AUDIO_SERVER}${s}.mp3`;
+}
+
+// Fetch ayah timing data for a surah (start/end times in ms)
+export async function fetchAyahTimings(surahId: number): Promise<AyahTiming[]> {
+  if (timingCache.has(surahId)) {
+    return timingCache.get(surahId)!;
+  }
+
+  const res = await fetch(
+    `https://mp3quran.net/api/v3/ayat_timing?surah=${surahId}&read=${RECITER_READ_ID}`
+  );
+
+  if (!res.ok) return [];
+
+  const json: { ayah: number; start_time: number; end_time: number }[] = await res.json();
+  const timings: AyahTiming[] = json.map(t => ({
+    ayah: t.ayah,
+    start_time: t.start_time,
+    end_time: t.end_time,
+  }));
+
+  timingCache.set(surahId, timings);
+  return timings;
 }
 
 export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
@@ -48,7 +74,6 @@ export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
     number: a.number,
     numberInSurah: a.numberInSurah,
     text: a.text,
-    audioUrl: getAudioUrl(surahId, a.numberInSurah),
   }));
 
   textCache.set(surahId, ayahs);
@@ -60,13 +85,4 @@ export function preloadSurah(surahId: number) {
   if (textCache.has(surahId) || preloadQueue.has(surahId)) return;
   preloadQueue.add(surahId);
   fetchSurahAyahs(surahId).finally(() => preloadQueue.delete(surahId));
-}
-
-// Preload audio for upcoming ayahs
-export function preloadAudio(urls: string[]) {
-  urls.forEach(url => {
-    const audio = new Audio();
-    audio.preload = 'auto';
-    audio.src = url;
-  });
 }
