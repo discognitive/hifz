@@ -24,7 +24,7 @@ const Index = () => {
   const [activeSurah, setActiveSurah] = useState<Surah | null>(null);
   const [selectedJuz, setSelectedJuz] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const { isDark, toggle: toggleTheme } = useTheme();
   const handleConfirmMark = useCallback(() => {
     if (confirmSurah) {
       markAsMemorized(confirmSurah.id);
