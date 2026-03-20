@@ -53,6 +53,21 @@ export async function fetchAyahTimings(surahId: number): Promise<AyahTiming[]> {
   return timings;
 }
 
+// Bismillah text variants to strip from ayah 1
+const BISMILLAH_PATTERNS = [
+  'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
+  'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+  'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+];
+
+function stripBismillah(text: string): string {
+  let cleaned = text;
+  for (const pattern of BISMILLAH_PATTERNS) {
+    cleaned = cleaned.replace(pattern, '');
+  }
+  return cleaned.trim();
+}
+
 export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
   if (textCache.has(surahId)) {
     return textCache.get(surahId)!;
@@ -70,11 +85,18 @@ export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
     ? rawData
     : rawData.ayahs;
 
-  const ayahs: AyahData[] = rawAyahs.map((a) => ({
-    number: a.number,
-    numberInSurah: a.numberInSurah,
-    text: a.text,
-  }));
+  const ayahs: AyahData[] = rawAyahs.map((a) => {
+    let text = a.text;
+    // Strip Bismillah from ayah 1 for all surahs except Al-Fatihah (1) and At-Tawbah (9, has no Bismillah)
+    if (a.numberInSurah === 1 && surahId !== 1 && surahId !== 9) {
+      text = stripBismillah(text);
+    }
+    return {
+      number: a.number,
+      numberInSurah: a.numberInSurah,
+      text,
+    };
+  });
 
   textCache.set(surahId, ayahs);
   return ayahs;

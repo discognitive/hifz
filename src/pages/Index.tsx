@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { surahs, type Surah } from '@/data/surahs';
+import { useState, useCallback, useMemo } from 'react';
+import { surahs, getAllJuz, getSurahsByJuz, type Surah } from '@/data/surahs';
 import { useMemorization } from '@/hooks/useMemorization';
 import { SurahRow } from '@/components/SurahRow';
 import { RankDisplay } from '@/components/RankDisplay';
@@ -20,6 +20,7 @@ const Index = () => {
 
   const [confirmSurah, setConfirmSurah] = useState<Surah | null>(null);
   const [activeSurah, setActiveSurah] = useState<Surah | null>(null);
+  const [selectedJuz, setSelectedJuz] = useState<number | null>(null);
 
   const handleConfirmMark = useCallback(() => {
     if (confirmSurah) {
@@ -27,6 +28,13 @@ const Index = () => {
       setConfirmSurah(null);
     }
   }, [confirmSurah, markAsMemorized]);
+
+  const filteredSurahs = useMemo(() => {
+    if (selectedJuz === null) return surahs;
+    return getSurahsByJuz(selectedJuz);
+  }, [selectedJuz]);
+
+  const juzList = useMemo(() => getAllJuz(), []);
 
   if (activeSurah) {
     const p = getProgress(activeSurah.id);
@@ -55,9 +63,38 @@ const Index = () => {
       {/* Rank bar */}
       <RankDisplay totalXp={totalXp} />
 
+      {/* Juz filter */}
+      <div className="border-b border-border">
+        <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setSelectedJuz(null)}
+            className={`flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+              selectedJuz === null
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            All
+          </button>
+          {juzList.map(juz => (
+            <button
+              key={juz}
+              onClick={() => setSelectedJuz(juz)}
+              className={`flex-shrink-0 px-2.5 py-1 rounded-md text-xs font-medium transition-colors tabular-nums ${
+                selectedJuz === juz
+                  ? 'bg-foreground text-background'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {juz}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Surah list */}
       <div>
-        {surahs.map(surah => {
+        {filteredSurahs.map(surah => {
           const progress = getProgress(surah.id);
           const percent = getCompletionPercent(surah.id);
           return (
