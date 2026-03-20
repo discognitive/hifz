@@ -67,13 +67,15 @@ export const RANKS = [
   { name: "Hafiz", minXp: 6000, color: "rank-diamond" },
 ] as const;
 
-export function getRank(xp: number) {
-  let current = RANKS[0];
-  let next = RANKS[1];
+export type Rank = (typeof RANKS)[number];
+
+export function getRank(xp: number): { current: Rank; next: Rank } {
+  let current: Rank = RANKS[0];
+  let next: Rank = RANKS[1] ?? RANKS[0];
   for (let i = RANKS.length - 1; i >= 0; i--) {
     if (xp >= RANKS[i].minXp) {
       current = RANKS[i];
-      next = RANKS[i + 1] || RANKS[i];
+      next = RANKS[i + 1] ?? RANKS[i];
       break;
     }
   }
