@@ -1,12 +1,13 @@
 import { useState, useCallback, useMemo } from 'react';
 import { surahs, getAllJuz, getSurahsByJuz, SURAH_ALT_NAMES, type Surah } from '@/data/surahs';
 import { useMemorization } from '@/hooks/useMemorization';
+import { useTheme } from '@/hooks/useTheme';
 import { SurahRow } from '@/components/SurahRow';
 import { RankDisplay } from '@/components/RankDisplay';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { XpPopup } from '@/components/XpPopup';
 import { SurahReader } from '@/components/SurahReader';
-import { Search, X } from 'lucide-react';
+import { Search, X, Moon, Sun } from 'lucide-react';
 
 const Index = () => {
   const {
