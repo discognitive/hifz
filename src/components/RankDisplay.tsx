@@ -12,7 +12,7 @@ export function RankDisplay({ totalXp }: RankDisplayProps) {
     : Math.round(((totalXp - current.minXp) / (next.minXp - current.minXp)) * 100);
 
   return (
-    <div className="px-4 py-3 border-b border-border">
+    <div className="px-4 py-3 border-b border-border sticky top-0 z-20 bg-background">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className={`text-${current.color} font-medium`} style={{ fontSize: '13px' }}>
