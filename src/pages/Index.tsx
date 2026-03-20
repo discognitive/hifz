@@ -159,6 +159,13 @@ const Index = () => {
         })}
       </div>
 
+      {/* Credit */}
+      <div className="py-6 text-center">
+        <p className="text-muted-foreground" style={{ fontSize: '10px' }}>
+          Made by <span className="text-foreground/70">Omar Abughali</span>
+        </p>
+      </div>
+
       {/* Confirm sheet */}
       {confirmSurah && (
         <ConfirmSheet
