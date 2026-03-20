@@ -58,34 +58,29 @@ function stripDiacritics(text: string): string {
   return text.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0890\u0891\u08D3-\u08FF]/g, '');
 }
 
-const BISMILLAH_BASE = stripDiacritics('بسم الله الرحمن الرحيم');
+const BISMILLAH_BASE = 'بسم الله الرحمن الرحيم';
 
 function stripBismillah(text: string): string {
-  // Normalize and check if text starts with any form of Bismillah
-  const normalized = stripDiacritics(text).replace(/\s+/g, ' ').trim();
-  const base = BISMILLAH_BASE.replace(/\s+/g, ' ');
-  
-  if (!normalized.startsWith(base)) return text;
-  
-  // Find where Bismillah ends in the original text by matching character count (excluding diacritics)
-  let baseChars = 0;
-  let cutIndex = 0;
-  for (cutIndex = 0; cutIndex < text.length; cutIndex++) {
-    const ch = text[cutIndex];
-    if (!stripDiacritics(ch).match(/\s/) && stripDiacritics(ch).length > 0) {
-      baseChars++;
-    } else if (ch.match(/\s/)) {
-      // count spaces in base too
-    }
-    // Check if we've consumed the full base
-    const soFar = stripDiacritics(text.slice(0, cutIndex + 1)).replace(/\s+/g, ' ').trim();
-    if (soFar.length >= base.length) {
-      cutIndex++;
-      break;
-    }
+  const stripped = stripDiacritics(text).replace(/\s+/g, ' ').trim();
+  const base = BISMILLAH_BASE.replace(/\s+/g, ' ').trim();
+
+  if (!stripped.startsWith(base)) return text;
+
+  // Walk the original text, skipping chars until we've matched
+  // the full Bismillah (ignoring diacritics)
+  let matched = 0;
+  const target = base.replace(/\s/g, ''); // base without spaces for char counting
+  let i = 0;
+
+  for (; i < text.length && matched < target.length; i++) {
+    const plain = stripDiacritics(text[i]);
+    if (plain.trim().length > 0) matched++; // non-diacritic, non-space char
   }
-  
-  return text.slice(cutIndex).trim();
+
+  // Skip any trailing whitespace/diacritics after the match
+  while (i < text.length && /[\s\u0610-\u061A\u064B-\u065F]/.test(text[i])) i++;
+
+  return text.slice(i).trim();
 }
 
 export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
