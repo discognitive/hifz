@@ -34,11 +34,18 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
       fetchSurahAyahs(surah.id),
       fetchAyahTimings(surah.id),
     ])
-      .then(([ayahData, timingData]) => {
-        setAyahs(ayahData);
-        setTimings(timingData);
-        setLoading(false);
-      })
+        .then(([ayahData, timingData]) => {
+          const BISMILLAH = '\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650';
+          const cleaned = ayahData.map((ayah, i) => {
+            if (i === 0 && surah.id !== 1 && surah.id !== 9 && ayah.text.startsWith(BISMILLAH)) {
+              return { ...ayah, text: ayah.text.slice(BISMILLAH.length).trim() };
+            }
+            return ayah;
+          });
+          setAyahs(cleaned);
+          setTimings(timingData);
+          setLoading(false);
+        })
       .catch(() => {
         setError('Failed to load surah');
         setLoading(false);
