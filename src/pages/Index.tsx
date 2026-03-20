@@ -65,13 +65,22 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="px-4 border-b border-border" style={{ paddingTop: '16px', paddingBottom: '14px' }}>
-        <h1 className="text-foreground" style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>
-          Hifz
-        </h1>
-        <p className="text-muted-foreground mt-0.5" style={{ fontSize: '12px' }}>
-          Memorization tracker
-        </p>
+      <header className="px-4 border-b border-border flex items-center justify-between" style={{ paddingTop: '16px', paddingBottom: '14px' }}>
+        <div>
+          <h1 className="text-foreground" style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>
+            Hifz<span className="text-primary">.</span>
+          </h1>
+          <p className="text-muted-foreground mt-0.5" style={{ fontSize: '12px' }}>
+            Memorization tracker
+          </p>
+        </div>
+        <button
+          onClick={toggleTheme}
+          className="text-muted-foreground hover:text-foreground transition-colors p-2"
+          aria-label="Toggle theme"
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
       </header>
 
       {/* Rank bar */}
