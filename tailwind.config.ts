@@ -47,6 +47,34 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        xp: {
+          DEFAULT: "hsl(var(--xp))",
+          foreground: "hsl(var(--xp-foreground))",
+        },
+        progress: {
+          fill: "hsl(var(--progress-fill))",
+          track: "hsl(var(--progress-track))",
+        },
+        diff: {
+          1: "hsl(var(--diff-1))",
+          2: "hsl(var(--diff-2))",
+          3: "hsl(var(--diff-3))",
+          4: "hsl(var(--diff-4))",
+          5: "hsl(var(--diff-5))",
+          6: "hsl(var(--diff-6))",
+          7: "hsl(var(--diff-7))",
+          8: "hsl(var(--diff-8))",
+          9: "hsl(var(--diff-9))",
+          10: "hsl(var(--diff-10))",
+          11: "hsl(var(--diff-11))",
+        },
+        rank: {
+          bronze: "hsl(var(--rank-bronze))",
+          silver: "hsl(var(--rank-silver))",
+          gold: "hsl(var(--rank-gold))",
+          emerald: "hsl(var(--rank-emerald))",
+          diamond: "hsl(var(--rank-diamond))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -65,20 +93,12 @@ export default {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
