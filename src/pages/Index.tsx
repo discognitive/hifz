@@ -1,12 +1,13 @@
 import { useState, useCallback, useMemo } from 'react';
 import { surahs, getAllJuz, getSurahsByJuz, SURAH_ALT_NAMES, type Surah } from '@/data/surahs';
 import { useMemorization } from '@/hooks/useMemorization';
+import { useTheme } from '@/hooks/useTheme';
 import { SurahRow } from '@/components/SurahRow';
 import { RankDisplay } from '@/components/RankDisplay';
 import { ConfirmSheet } from '@/components/ConfirmSheet';
 import { XpPopup } from '@/components/XpPopup';
 import { SurahReader } from '@/components/SurahReader';
-import { Search, X } from 'lucide-react';
+import { Search, X, Moon, Sun } from 'lucide-react';
 
 const Index = () => {
   const {
@@ -23,7 +24,7 @@ const Index = () => {
   const [activeSurah, setActiveSurah] = useState<Surah | null>(null);
   const [selectedJuz, setSelectedJuz] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const { isDark, toggle: toggleTheme } = useTheme();
   const handleConfirmMark = useCallback(() => {
     if (confirmSurah) {
       markAsMemorized(confirmSurah.id);
@@ -64,13 +65,22 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="px-4 border-b border-border" style={{ paddingTop: '16px', paddingBottom: '14px' }}>
-        <h1 className="text-foreground" style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>
-          Hifz
-        </h1>
-        <p className="text-muted-foreground mt-0.5" style={{ fontSize: '12px' }}>
-          Memorization tracker
-        </p>
+      <header className="px-4 border-b border-border flex items-center justify-between" style={{ paddingTop: '16px', paddingBottom: '14px' }}>
+        <div>
+          <h1 className="text-foreground" style={{ fontSize: '18px', fontWeight: 600, letterSpacing: '-0.02em' }}>
+            Hifz<span className="text-primary">.</span>
+          </h1>
+          <p className="text-muted-foreground mt-0.5" style={{ fontSize: '12px' }}>
+            Memorization tracker
+          </p>
+        </div>
+        <button
+          onClick={toggleTheme}
+          className="text-muted-foreground hover:text-foreground transition-colors p-2"
+          aria-label="Toggle theme"
+        >
+          {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+        </button>
       </header>
 
       {/* Rank bar */}
@@ -147,6 +157,13 @@ const Index = () => {
             />
           );
         })}
+      </div>
+
+      {/* Credit */}
+      <div className="py-6 text-center">
+        <p className="text-muted-foreground" style={{ fontSize: '10px' }}>
+          Made by <span className="text-foreground/70">Omar Abughali</span>
+        </p>
       </div>
 
       {/* Confirm sheet */}
