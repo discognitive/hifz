@@ -22,6 +22,7 @@ const Index = () => {
   const [confirmSurah, setConfirmSurah] = useState<Surah | null>(null);
   const [activeSurah, setActiveSurah] = useState<Surah | null>(null);
   const [selectedJuz, setSelectedJuz] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleConfirmMark = useCallback(() => {
     if (confirmSurah) {
@@ -31,9 +32,20 @@ const Index = () => {
   }, [confirmSurah, markAsMemorized]);
 
   const filteredSurahs = useMemo(() => {
-    if (selectedJuz === null) return surahs;
-    return getSurahsByJuz(selectedJuz);
-  }, [selectedJuz]);
+    let list = selectedJuz === null ? surahs : getSurahsByJuz(selectedJuz);
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      list = list.filter(s => {
+        if (s.name.toLowerCase().includes(q)) return true;
+        if (s.nameArabic.includes(q)) return true;
+        if (String(s.id) === q) return true;
+        const alts = SURAH_ALT_NAMES[s.id];
+        if (alts?.some(alt => alt.toLowerCase().includes(q))) return true;
+        return false;
+      });
+    }
+    return list;
+  }, [selectedJuz, searchQuery]);
 
   const juzList = useMemo(() => getAllJuz(), []);
 
