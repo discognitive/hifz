@@ -53,36 +53,13 @@ export async function fetchAyahTimings(surahId: number): Promise<AyahTiming[]> {
   return timings;
 }
 
-// Normalize Arabic text by removing diacritics for comparison
-function stripDiacritics(text: string): string {
-  return text
-    .replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0890\u0891\u08D3-\u08FF]/g, '')
-    .replace(/\u0671/g, '\u0627'); // normalize Alef Wasla → regular Alef
-}
-
-const BISMILLAH_BASE = 'بسم الله الرحمن الرحيم';
+const BISMILLAH_API = '\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650';
 
 function stripBismillah(text: string): string {
-  const stripped = stripDiacritics(text).replace(/\s+/g, ' ').trim();
-  const base = BISMILLAH_BASE.replace(/\s+/g, ' ').trim();
-
-  if (!stripped.startsWith(base)) return text;
-
-  // Walk the original text, skipping chars until we've matched
-  // the full Bismillah (ignoring diacritics)
-  let matched = 0;
-  const target = base.replace(/\s/g, ''); // base without spaces for char counting
-  let i = 0;
-
-  for (; i < text.length && matched < target.length; i++) {
-    const plain = stripDiacritics(text[i]);
-    if (plain.trim().length > 0) matched++; // non-diacritic, non-space char
+  if (text.startsWith(BISMILLAH_API)) {
+    return text.slice(BISMILLAH_API.length).trim();
   }
-
-  // Skip any trailing whitespace/diacritics after the match
-  while (i < text.length && /[\s\u0610-\u061A\u064B-\u065F]/.test(text[i])) i++;
-
-  return text.slice(i).trim();
+  return text;
 }
 
 export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
@@ -105,11 +82,9 @@ export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
   const ayahs: AyahData[] = rawAyahs.map((a) => {
     let text = a.text;
     // Strip Bismillah from ayah 1 for all surahs except Al-Fatihah (1) and At-Tawbah (9, has no Bismillah)
-    if (a.numberInSurah === 1 && surahId !== 1 && surahId !== 9) {
-      console.log('Before strip:', a.text);
+    //if (a.numberInSurah === 1 && surahId !== 1 && surahId !== 9) {
       text = stripBismillah(text);
-      console.log('After strip:', text);
-    }
+    //}
     return {
       number: a.number,
       numberInSurah: a.numberInSurah,
