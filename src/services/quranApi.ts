@@ -38,12 +38,13 @@ export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
 
   if (!res.ok) throw new Error(`Failed to fetch surah ${surahId}`);
 
-  const json: ApiResponse = await res.json();
-  const rawAyahs = Array.isArray(json.data)
-    ? json.data
-    : (json.data as { ayahs: ApiAyah[] }).ayahs;
+  const json = await res.json();
+  const rawData = json.data;
+  const rawAyahs: ApiAyah[] = Array.isArray(rawData)
+    ? rawData
+    : rawData.ayahs;
 
-  const ayahs: AyahData[] = rawAyahs.map((a: ApiAyah) => ({
+  const ayahs: AyahData[] = rawAyahs.map((a) => ({
     number: a.number,
     numberInSurah: a.numberInSurah,
     text: a.text,
