@@ -81,10 +81,10 @@ export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
 
   const ayahs: AyahData[] = rawAyahs.map((a) => {
     let text = a.text;
-    // Strip Bismillah from ayah 1 for all surahs except Al-Fatihah (1) and At-Tawbah (9, has no Bismillah)
-    //if (a.numberInSurah === 1 && surahId !== 1 && surahId !== 9) {
+    if (a.numberInSurah === 1 && surahId !== 1 && surahId !== 9) {
       text = stripBismillah(text);
-    //}
+      console.log('Surah', surahId, 'ayah 1 after strip:', text);
+    }
     return {
       number: a.number,
       numberInSurah: a.numberInSurah,
