@@ -53,19 +53,39 @@ export async function fetchAyahTimings(surahId: number): Promise<AyahTiming[]> {
   return timings;
 }
 
-// Bismillah text variants to strip from ayah 1
-const BISMILLAH_PATTERNS = [
-  'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',
-  'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-  'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
-];
+// Normalize Arabic text by removing diacritics for comparison
+function stripDiacritics(text: string): string {
+  return text.replace(/[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED\u0890\u0891\u08D3-\u08FF]/g, '');
+}
+
+const BISMILLAH_BASE = stripDiacritics('بسم الله الرحمن الرحيم');
 
 function stripBismillah(text: string): string {
-  let cleaned = text;
-  for (const pattern of BISMILLAH_PATTERNS) {
-    cleaned = cleaned.replace(pattern, '');
+  // Normalize and check if text starts with any form of Bismillah
+  const normalized = stripDiacritics(text).replace(/\s+/g, ' ').trim();
+  const base = BISMILLAH_BASE.replace(/\s+/g, ' ');
+  
+  if (!normalized.startsWith(base)) return text;
+  
+  // Find where Bismillah ends in the original text by matching character count (excluding diacritics)
+  let baseChars = 0;
+  let cutIndex = 0;
+  for (cutIndex = 0; cutIndex < text.length; cutIndex++) {
+    const ch = text[cutIndex];
+    if (!stripDiacritics(ch).match(/\s/) && stripDiacritics(ch).length > 0) {
+      baseChars++;
+    } else if (ch.match(/\s/)) {
+      // count spaces in base too
+    }
+    // Check if we've consumed the full base
+    const soFar = stripDiacritics(text.slice(0, cutIndex + 1)).replace(/\s+/g, ' ').trim();
+    if (soFar.length >= base.length) {
+      cutIndex++;
+      break;
+    }
   }
-  return cleaned.trim();
+  
+  return text.slice(cutIndex).trim();
 }
 
 export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
