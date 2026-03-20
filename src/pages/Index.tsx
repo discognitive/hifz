@@ -76,6 +76,28 @@ const Index = () => {
       {/* Rank bar */}
       <RankDisplay totalXp={totalXp} />
 
+      {/* Search bar */}
+      <div className="px-4 py-2.5 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search by name, number, or alternate name..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full bg-muted/50 text-foreground placeholder:text-muted-foreground rounded-lg pl-8 pr-8 py-2 text-xs outline-none focus:ring-1 focus:ring-ring transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Juz filter */}
       <div className="border-b border-border">
         <div className="flex items-center gap-1.5 px-4 py-2.5 overflow-x-auto no-scrollbar">

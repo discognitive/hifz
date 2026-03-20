@@ -2,12 +2,62 @@ export interface Surah {
   id: number;
   name: string;
   nameArabic: string;
+  altNames?: string[]; // alternate / popular names
   ayahCount: number;
   difficulty: number; // 1–11
   xpReward: number;
   revelationType: 'meccan' | 'medinan';
   juz: number[]; // which juz(s) this surah spans
 }
+
+// Alternate names map keyed by surah id
+export const SURAH_ALT_NAMES: Record<number, string[]> = {
+  1: ["Fatiha", "The Opening", "Umm Al-Kitab", "Umm Al-Quran", "As-Sab'ul Mathani"],
+  2: ["Baqara", "The Cow"],
+  3: ["Aal Imran", "Al Imran", "Family of Imran"],
+  5: ["Maidah", "The Table Spread"],
+  6: ["Anam", "The Cattle"],
+  7: ["Araf", "The Heights"],
+  12: ["Joseph"],
+  13: ["Raad", "The Thunder"],
+  16: ["Nahl", "The Bee"],
+  17: ["Isra", "Bani Israil", "The Night Journey"],
+  18: ["Kahf", "The Cave"],
+  19: ["Mary"],
+  20: ["Taha"],
+  21: ["Anbiya", "The Prophets"],
+  25: ["Furqan", "The Criterion"],
+  29: ["Ankabut", "The Spider"],
+  36: ["Yasin", "Ya Sin", "Yaseen", "The Heart of the Quran"],
+  44: ["Dukhan", "The Smoke"],
+  48: ["Fath", "The Victory"],
+  55: ["Rahman", "The Most Merciful"],
+  56: ["Waqiah", "Waqia", "The Event"],
+  67: ["Mulk", "Tabarak", "The Sovereignty", "The Kingdom"],
+  71: ["Noah"],
+  72: ["Jinn", "The Jinn"],
+  78: ["Naba", "Amma", "The Great News"],
+  87: ["Ala", "Sabbih"],
+  93: ["Duha", "The Morning Hours"],
+  94: ["Sharh", "Inshirah", "Alam Nashrah", "The Relief"],
+  97: ["Qadr", "Laylatul Qadr", "The Night of Power"],
+  99: ["Zilzal", "Zalzala", "The Earthquake"],
+  100: ["Adiyat", "The Chargers"],
+  101: ["Qariah", "The Calamity"],
+  102: ["Takathur", "The Rivalry"],
+  103: ["Asr", "The Time"],
+  104: ["Humaza", "The Slanderer"],
+  105: ["Fil", "The Elephant"],
+  106: ["Quraish"],
+  107: ["Maun", "The Small Kindnesses"],
+  108: ["Kauthar", "Kawthar", "The Abundance"],
+  109: ["Kafirun", "Kafiroon", "The Disbelievers"],
+  110: ["Nasr", "The Help"],
+  111: ["Masad", "Lahab", "The Flame"],
+  112: ["Ikhlas", "Tawhid", "The Sincerity", "Qul Huwallah"],
+  113: ["Falaq", "The Daybreak"],
+  114: ["Nas", "The Mankind"],
+};
 
 function calcXp(ayahCount: number, difficulty: number): number {
   return Math.round(ayahCount * (0.8 + difficulty * 0.4));
