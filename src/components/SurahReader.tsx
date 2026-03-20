@@ -218,7 +218,12 @@ export function SurahReader({ surah, memorizedAyahs, onBack, onAdvanceAyah }: Su
 
         {!loading && !error && (
           <div className="max-w-lg w-full space-y-4">
-
+            {/* Bismillah header - not part of ayah list */}
+            {surah.id !== 9 && surah.id !== 1 && (
+              <p className="font-quran text-center text-foreground" style={{ fontSize: '22px', lineHeight: '2', marginBottom: '12px' }}>
+                بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ
+              </p>
+            )}
             {ayahs.map((ayah, i) => (
               <p
                 key={ayah.numberInSurah}
