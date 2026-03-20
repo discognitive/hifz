@@ -104,7 +104,9 @@ export async function fetchSurahAyahs(surahId: number): Promise<AyahData[]> {
     let text = a.text;
     // Strip Bismillah from ayah 1 for all surahs except Al-Fatihah (1) and At-Tawbah (9, has no Bismillah)
     if (a.numberInSurah === 1 && surahId !== 1 && surahId !== 9) {
+      console.log('Before strip:', a.text);
       text = stripBismillah(text);
+      console.log('After strip:', text);
     }
     return {
       number: a.number,
