@@ -31,7 +31,7 @@ function calcXp(ayahCount: number, difficulty: number): number {
 }
 
 export const surahs: Surah[] = [
-  { id: 1, name: "Al-Fatihah", nameArabic: "الفاتحة", ayahCount: 7, difficulty: 1, xpReward: 10, revelationType: "meccan" },
+  { id: 1, name: "Al-Fatihah", nameArabic: "الفاتحة", ayahCount: 7, difficulty: 1, xpReward: 10, revelationType: "meccan", juz: SURAH_JUZ[1] },
   { id: 2, name: "Al-Baqarah", nameArabic: "البقرة", ayahCount: 286, difficulty: 11, xpReward: calcXp(286, 11), revelationType: "medinan" },
   { id: 3, name: "Aal-E-Imran", nameArabic: "آل عمران", ayahCount: 200, difficulty: 10, xpReward: calcXp(200, 10), revelationType: "medinan" },
   { id: 4, name: "An-Nisa", nameArabic: "النساء", ayahCount: 176, difficulty: 10, xpReward: calcXp(176, 10), revelationType: "medinan" },
